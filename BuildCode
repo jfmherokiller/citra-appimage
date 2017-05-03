@@ -1,0 +1,13 @@
+#!/bin/bash -eux
+
+git clone --recursive https://github.com/citra-emu/citra.git
+APP=Citra
+LOWERAPP=${APP,,}
+INSTALLDIRLOC=/$APP/$APP.AppDir
+mkdir -p ${INSTALLDIRLOC}/usr/bin
+cd citra
+mkdir build
+cd build
+cmake .. -GNinja -DCMAKE_INSTALL_PREFIX=${INSTALLDIRLOC}/usr -DCMAKE_BUILD_TYPE=Release
+ninja
+ninja install

@@ -1,0 +1,70 @@
+#!/bin/bash -eux
+
+# Source helper functions
+wget -q https://github.com/probonopd/AppImages/raw/master/functions.sh -O ./functions.sh
+. ./functions.sh
+rm functions.sh
+
+APP=Citra
+LOWERAPP=${APP,,}
+INSTALLDIRLOC=/$APP/$APP.AppDir
+mkdir -p ${INSTALLDIRLOC}/usr/bin
+
+cp ${INSTALLDIRLOC}/usr/share/applications/citra.desktop ${INSTALLDIRLOC}/
+cp ${INSTALLDIRLOC}/usr/share/pixmaps/citra.svg ${INSTALLDIRLOC}/
+
+wget -q https://github.com/probonopd/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /AppImageKit
+chmod a+x /AppImageKit
+/AppImageKit --appimage-extract
+#begin bunding depencies
+cd ${INSTALLDIRLOC}/
+wget -q https://github.com/probonopd/AppImageKit/releases/download/continuous/AppRun-x86_64 -O ../AppRun
+chmod a+x ../AppRun
+
+export LD_LIBRARY_PATH=./usr/lib/:../../5.5/gc*/lib/:$LD_LIBRARY_PATH
+ldd usr/bin/citra | grep "=>" | awk '{print $3}'  |  xargs -I '{}' cp -v '{}' ./usr/lib || true
+ldd usr/bin/citra-qt | grep "=>" | awk '{print $3}'  |  xargs -I '{}' cp -v '{}' ./usr/lib || true
+# Delete potentially dangerous libraries
+rm -f usr/lib/libstdc* usr/lib/libgobject* usr/lib/libc.so.* || true
+
+
+# We don't bundle the developer stuff
+rm -rf usr/include || true
+rm -rf usr/lib/cmake || true
+rm -rf usr/lib/pkgconfig || true
+
+strip usr/bin/* usr/lib/* || true
+
+# On openSUSE Qt is picking up the wrong libqxcb.so
+# (the one from the system when in fact it should use the bundled one) - is this a Qt bug?
+# Hence, we binary patch /usr/lib* to $CWD/lib* which works because at runtime,
+# the current working directory is set to usr/ inside the AppImage before running the app
+cd usr/ ; find . -type f -exec sed -i -e 's|/usr/lib|././/lib|g' {} \; ; cd ..
+
+
+# Add desktop integration
+get_desktopintegration citra
+
+# Remove blacklisted files
+delete_blacklisted
+
+cd ..
+
+# Figure out $VERSION
+GITVERSION=$(cd /citra ; git describe --always | sed -e 's/-g.*$// ; s/^v//')
+GITREVISION=$(echo $GITVERSION | sed -e 's/.*-// ; s/.*\..*//')
+VERSION=$(echo $GITVERSION | sed -e 's/-/./')
+echo $VERSION
+APPIMAGE=$APP"-"$VERSION"-x86_64.AppImage"
+
+
+mkdir -p /out
+
+rm -f /out/*.AppImage || true
+
+# Convert the AppDir into an AppImage
+rm -rf $APPIMAGE
+/squashfs-root/AppRun ./$APP.AppDir/ /out/$APPIMAGE
+
+chmod a+rwx /out/$APPIMAGE # So that we can edit the AppImage outside of the Docker container
+ls -lh /out/$APPIMAGE
