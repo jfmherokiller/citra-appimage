@@ -1,9 +1,12 @@
 #!/bin/bash -eux
-
-git clone --recursive https://github.com/citra-emu/citra.git
 APP=Citra
 LOWERAPP=${APP,,}
 INSTALLDIRLOC=/$APP/$APP.AppDir
+
+export LD_LIBRARY_PATH=${INSTALLDIRLOC}/usr/lib:$LD_LIBRARY_PATH
+export CC="clang-3.9 -stdlib=libc++" 
+export CXX="clang++-3.9 -stdlib=libc++"
+git clone --recursive https://github.com/citra-emu/citra.git
 mkdir -p ${INSTALLDIRLOC}/usr/bin
 cd citra
 mkdir build

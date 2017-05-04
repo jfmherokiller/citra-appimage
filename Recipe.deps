@@ -1,4 +1,7 @@
 #!/bin/bash -eux
+APP=Citra
+LOWERAPP=${APP,,}
+INSTALLDIRLOC=/$APP/$APP.AppDir
 
 echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" >> /etc/apt/sources.list && \
 echo "deb-src http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" >> /etc/apt/sources.list && \
@@ -23,6 +26,6 @@ cd llvmsrc
 svn co https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_390/final/ llvm
 svn co https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_390/final/ llvm/projects/libcxx
 svn co http://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_390/final/ llvm/projects/libcxxabi
-mkdir build && cd build && cmake -GNinja -DLLVM_TARGETS_TO_BUILD="X86" ../llvm && ninja install && cd ../../
+mkdir build && cd build && cmake -GNinja -DCMAKE_INSTALL_PREFIX=${INSTALLDIRLOC}/usr -DLLVM_TARGETS_TO_BUILD="X86" ../llvm && ninja install && cd ../../
 rm -rf llvmsrc
 

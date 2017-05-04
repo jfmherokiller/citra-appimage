@@ -18,10 +18,10 @@ chmod a+x /AppImageKit
 /AppImageKit --appimage-extract
 #begin bunding depencies
 cd ${INSTALLDIRLOC}/
-wget -q https://github.com/probonopd/AppImageKit/releases/download/continuous/AppRun-x86_64 -O ../AppRun
-chmod a+x ../AppRun
+wget -q https://github.com/probonopd/AppImageKit/releases/download/continuous/AppRun-x86_64 -O ${INSTALLDIRLOC}/AppRun
+chmod a+x ${INSTALLDIRLOC}/AppRun
 
-export LD_LIBRARY_PATH=./usr/lib/:../../5.5/gc*/lib/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${INSTALLDIRLOC}/usr/lib:$LD_LIBRARY_PATH
 ldd usr/bin/citra | grep "=>" | awk '{print $3}'  |  xargs -I '{}' cp -v '{}' ${INSTALLDIRLOC}/usr/lib/ || true
 ldd usr/bin/citra-qt | grep "=>" | awk '{print $3}'  |  xargs -I '{}' cp -v '{}' ${INSTALLDIRLOC}/usr/lib/ || true
 # Delete potentially dangerous libraries
